@@ -10,9 +10,9 @@
 
 
 using namespace std;
-const double LEARNING_RATE = 0.01;
 const double SAMPLES = 500;
 const double EPOCHS = 500;
+const double PI = 3.1415926535897932
 
 
 TEST_GROUP(Evox)
@@ -45,13 +45,13 @@ TEST_WITH_MOCK(Evox, test_network)
     std::vector<double> outputs;
 
     for (int i=0; i<SAMPLES; ++i) {
-        double x = random(0, 2*3.1415926535);
+        double x = random(0, 2*PI);
         inputs.push_back(vector<double>{x});
         expected_outputs.push_back(vector<double>{sin(x)+1});
     }
 
     cout << "Learning a sine function ..." << endl;
-    for (int epoch=0; epoch<500; epoch++) {
+    for (int epoch=0; epoch<EPOCHS; epoch++) {
         for (int i=0; i<inputs.size(); ++i) {
             network.feed(inputs[i]);
             network.train(expected_outputs[i]);
@@ -60,7 +60,7 @@ TEST_WITH_MOCK(Evox, test_network)
 
     cout << "Generating predictions" << endl;
     for (int i=0; i<inputs.size(); ++i) {
-        double x = random(0, 2*3.1415926535);
+        double x = random(0, 2*PI);
         outputs = network.feed(vector<double>{x});
         cout << x << "," << outputs[0] << endl;
     }

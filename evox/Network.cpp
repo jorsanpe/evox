@@ -28,22 +28,22 @@ vector<double> Network::feed(vector<double> inputs)
 }
 
 
-void Network::backpropagate(const vector<double>& errors)
-{
-    vector<double> weighed_deltas = errors;
-
-    for (auto layer = layers.rbegin(); layer != layers.rend(); ++layer ) {
-        weighed_deltas = (*layer)->backpropagate(weighed_deltas);
-    }
-}
-
-
 void Network::train(const vector<double>& expected)
 {
     backpropagate(errors(expected));
 
     for (auto layer: layers) {
         layer->train(learning_rate);
+    }
+}
+
+
+void Network::backpropagate(const vector<double>& errors)
+{
+    vector<double> weighed_deltas = errors;
+
+    for (auto layer = layers.rbegin(); layer != layers.rend(); ++layer ) {
+        weighed_deltas = (*layer)->backpropagate(weighed_deltas);
     }
 }
 

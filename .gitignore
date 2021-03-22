@@ -1,0 +1,5 @@
+build/
+bits/
+cmake-build-debug/
+.idea/
+CMakeLists.txt

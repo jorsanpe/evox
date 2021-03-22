@@ -20,13 +20,13 @@ public:
     void removeInputs(int n);
 
 private:
-    int num_inputs;
     int id;
+    int num_inputs;
     std::vector<double> weights;
-    std::vector<double> weighed_deltas;
     double bias;
     double activation;
     double delta;
+    std::vector<double> weighed_deltas;
     double leaky_term;
 
     double relu(double value);
