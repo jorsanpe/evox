@@ -58,3 +58,9 @@ void Layer::train(double learning_rate)
         neuron->train(learning_rate, this->last_inputs);
     }
 }
+
+
+int Layer::numNeurons()
+{
+    return neurons.size();
+}

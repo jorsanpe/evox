@@ -17,6 +17,8 @@ public:
 
     void train(double learning_rate);
 
+    int numNeurons();
+
     ~Layer();
 
 protected:
