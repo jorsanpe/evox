@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020. Jordi Sánchez
  */
+#include <iostream>
 #include <evox/random.h>
 #include <evox/Perceptron.h>
 
@@ -12,15 +13,14 @@ using namespace std;
 Perceptron::Perceptron(int num_inputs, int neuron_id)
 {
     this->num_inputs = num_inputs;
-    weights.resize(num_inputs);
     weighed_deltas.resize(num_inputs);
     for (int i=0; i<num_inputs; ++i) {
-        weights[i] = random(MIN_WEIGHT, MAX_WEIGHT);
+        weights.push_back(random(MIN_WEIGHT, MAX_WEIGHT));
     }
     bias = random(MIN_WEIGHT, MAX_WEIGHT);
     activation = 0.0;
     id = neuron_id;
-    leaky_term = 0.01;
+    leaky_term = 0.05;
 }
 
 
@@ -70,10 +70,11 @@ double Perceptron::relu(double value)
 
 void Perceptron::addInputs(int n)
 {
-    for (int i=0; i<n; ++i) {
-        weights.push_back(random(-0.1, 0.1));
-    }
     this->num_inputs += n;
+    for (int i=0; i<n; ++i) {
+        weights.push_back(random(MIN_WEIGHT/10, MAX_WEIGHT/10));
+    }
+    weighed_deltas.resize(num_inputs);
 }
 
 

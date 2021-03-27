@@ -10,16 +10,16 @@
 
 
 using namespace std;
-const double SAMPLES = 500;
-const double EPOCHS = 1000;
-const double PI = 3.1415926535897932;
+static const double SAMPLES = 500;
+static const double BATCH_SIZE = 100;
+static const double PI = 3.1415926535897932;
 
 
 TEST_GROUP(Network)
 {
 };
 
-
+/*
 TEST_WITH_MOCK(Network, test_offline_learning)
 {
     vector<Layer *> layers = {
@@ -39,7 +39,7 @@ TEST_WITH_MOCK(Network, test_offline_learning)
     }
 
     cout << "Learning a sine function ..." << endl;
-    for (int epoch=0; epoch<EPOCHS; epoch++) {
+    for (int batch=0; batch<BATCH_SIZE; batch++) {
         for (int i=0; i<inputs.size(); ++i) {
             network.feed(inputs[i]);
             network.train(expected_outputs[i]);
@@ -57,7 +57,7 @@ TEST_WITH_MOCK(Network, test_offline_learning)
         delete layer;
     }
 }
-
+*/
 
 TEST_WITH_MOCK(Network, test_online_learning)
 {
@@ -78,17 +78,18 @@ TEST_WITH_MOCK(Network, test_online_learning)
     }
 
     cout << "Evolving a network to learn a sine function ..." << endl;
-    for (int epoch=0; epoch<EPOCHS; epoch++) {
-        for (int i=0; i<inputs.size(); ++i) {
-            network.feed(inputs[i]);
-            network.train(expected_outputs[i]);
+    for (int epoch=0; epoch<1000; ++epoch) {
+        for (int sample=0; sample<SAMPLES; sample++) {
+            double x = random(0, 2*PI);
+            network.feed(vector<double>{x});
+            network.train(vector<double>{sin(x)+1});
+
+//            cout
+//                << network.in_sample_error << "   "
+//                << network.out_of_sample_error
+//                << endl;
         }
         network.reflect();
-
-        cout
-            << network.in_sample_error << "   "
-            << network.out_of_sample_error
-            << endl;
     }
 
     cout << "Generating predictions" << endl;

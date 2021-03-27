@@ -17,11 +17,16 @@ public:
 
     void train(double learning_rate);
 
+    void addNeuron();
+
+    void addInput();
+
     int numNeurons();
 
     ~Layer();
 
 protected:
+    int num_inputs;
     std::vector<Perceptron *> neurons;
     std::vector<double> last_inputs;
     std::vector<double> outputs;

@@ -1,17 +1,19 @@
 /*
  * Copyright (c) 2020. Jordi Sánchez
  */
+#include <iostream>
 #include <evox/Layer.h>
 
 using namespace std;
 
 Layer::Layer(int num_inputs, int num_neurons)
 {
+    this->num_inputs = num_inputs;
     for (int i=0; i<num_neurons; ++i) {
         neurons.push_back(new Perceptron(num_inputs, i+1));
     }
     deltas.resize(num_inputs);
-    outputs.resize(num_neurons);
+    outputs.resize(neurons.size());
 }
 
 
@@ -63,4 +65,21 @@ void Layer::train(double learning_rate)
 int Layer::numNeurons()
 {
     return neurons.size();
+}
+
+
+void Layer::addNeuron()
+{
+    neurons.push_back(new Perceptron(num_inputs, outputs.size()+1));
+    outputs.resize(neurons.size());
+}
+
+
+void Layer::addInput()
+{
+    num_inputs += 1;
+    for (auto neuron: neurons) {
+        neuron->addInputs(1);
+    }
+    deltas.resize(num_inputs);
 }

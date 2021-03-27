@@ -3,3 +3,6 @@ bits/
 cmake-build-debug/
 .idea/
 CMakeLists.txt
+venv
+files
+plots
