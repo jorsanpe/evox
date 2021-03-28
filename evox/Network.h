@@ -6,12 +6,7 @@
 #include <list>
 #include <vector>
 #include <evox/Layer.h>
-
-
-struct Sample {
-    std::vector<double> inputs;
-    std::vector<double> expected_outputs;
-};
+#include <evox/Sample.h>
 
 
 class Network {

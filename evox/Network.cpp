@@ -14,7 +14,7 @@ const int DEFAULT_MEMORY_SIZE = 1000;
 const int DEFAULT_REFLECTION_ITERATIONS = 10;
 const double DEFAULT_LEARNING_RATE = 0.01;
 const double DEFAULT_TARGET_ERROR = 0.005;
-const double DEFAULT_STAGNATION_RATE = 0.001;
+const double DEFAULT_STAGNATION_RATE = 0.01;
 
 
 Network::Network(const vector<Layer *> &layers)
@@ -105,7 +105,12 @@ vector<double> Network::errors(vector<double> expected)
 
 void Network::updateOutOfSampleError(const vector<double> &output_error)
 {
-    double next_value = smooth(out_of_sample_error, abs(output_error[0] / max_output_values[0]));
+    double next_value = 0;
+
+    for (int i=0; i<output_error.size(); ++i) {
+        next_value += abs(output_error[i] / max_output_values[i]);
+    }
+    next_value = smooth(out_of_sample_error, next_value);
 
     out_of_sample_error_improvement_rate = (out_of_sample_error - next_value) / out_of_sample_error;
     out_of_sample_error = next_value;
@@ -146,7 +151,7 @@ void Network::updateInSampleError()
 
     in_sample_error_improvement_rate = smooth(
             in_sample_error_improvement_rate,
-            max(0.0, (in_sample_error - next_value)));
+            in_sample_error - next_value);
     in_sample_error = smooth(in_sample_error, next_value);
 }
 
@@ -154,9 +159,13 @@ void Network::updateInSampleError()
 double Network::averageInSampleError()
 {
     double average_error=0;
+    vector<double> predicted;
 
     for (auto sample: sample_memory) {
-        average_error += abs(feed(sample.inputs)[0] - sample.expected_outputs[0]) / max_output_values[0];
+        predicted = feed(sample.inputs);
+        for (int i=0; i<predicted.size(); ++i) {
+            average_error += abs(predicted[i] - sample.expected_outputs[i]) / max_output_values[i];
+        }
     }
 
     return average_error / sample_memory.size();
