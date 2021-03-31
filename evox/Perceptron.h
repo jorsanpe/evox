@@ -27,6 +27,7 @@ private:
     double activation;
     double delta;
     std::vector<double> weighed_deltas;
+    std::vector<double> derivatives;
     double leaky_term;
 
     double relu(double value);

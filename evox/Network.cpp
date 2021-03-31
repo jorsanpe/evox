@@ -11,7 +11,7 @@
 using namespace std;
 
 const int DEFAULT_MEMORY_SIZE = 1000;
-const int DEFAULT_REFLECTION_ITERATIONS = 10;
+const int DEFAULT_REFLECTION_ITERATIONS = 50;
 const double DEFAULT_LEARNING_RATE = 0.01;
 const double DEFAULT_TARGET_ERROR = 0.005;
 const double DEFAULT_STAGNATION_RATE = 0.01;
@@ -32,11 +32,10 @@ Network::Network(const vector<Layer *> &layers)
 }
 
 
-vector<double> Network::feed(vector<double> inputs)
+vector<double> Network::feed(const vector<double>& inputs)
 {
     last_input = inputs;
-
-    last_prediction = move(inputs);
+    last_prediction = inputs;
     for (auto layer: layers) {
         last_prediction = layer->feed(last_prediction);
     }
@@ -55,13 +54,12 @@ void Network::train(const vector<double>& expected)
         }
     }
 
-    if (!reflecting) {
-        storeSample(expected);
-    }
-
     output_error = errors(expected);
 
-    updateOutOfSampleError(output_error);
+    if (!reflecting) {
+        storeSample(expected);
+        updateOutOfSampleError(output_error);
+    }
 
     backpropagate(output_error);
 
@@ -141,6 +139,7 @@ void Network::reflect()
         if (modelTooComplex()) {
             simplify();
         }
+        stagnation_rate = stagnation_rate * (1 - learning_rate);
     }
 }
 
@@ -174,7 +173,7 @@ double Network::averageInSampleError()
 
 bool Network::stoppedLearning()
 {
-    return in_sample_error_improvement_rate < stagnation_rate;
+    return in_sample_error_improvement_rate >= 0 && in_sample_error_improvement_rate < stagnation_rate;
 }
 
 
@@ -204,7 +203,9 @@ void Network::evolve()
     index = (int)random(0, layers.size()-1);
     advance(layer, index);
 
-    cout << "evolving, add neuron to layer " << index << " " << (*layer) << endl;
+    cout
+        << "stagnant (" << in_sample_error_improvement_rate << " at " << stagnation_rate << "),"
+        << " add neuron to layer " << index << " " << " (" << (*layer)->numNeurons() << ")" << endl;
 
     (*layer)->addNeuron();
     (*next(layer))->addInput();

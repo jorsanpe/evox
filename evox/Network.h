@@ -12,15 +12,17 @@
 class Network {
 public:
     double in_sample_error;
-    double in_sample_error_improvement_rate{};
+    double in_sample_error_improvement_rate;
     double out_of_sample_error;
-    double out_of_sample_error_improvement_rate{};
+    double out_of_sample_error_improvement_rate;
 
     Network(const std::vector<Layer *> &layers);
 
-    std::vector<double> feed(std::vector<double> inputs);
+    std::vector<double> feed(const std::vector<double>& inputs);
 
     void train(const std::vector<double>& expected);
+
+    void updateInSampleError();
 
     void reflect();
 
@@ -46,8 +48,6 @@ private:
     double smooth(double previous, double next);
 
     void storeSample(const std::vector<double> &expected);
-
-    void updateInSampleError();
 
     void updateOutOfSampleError(const std::vector<double> &output_error);
 
