@@ -12,6 +12,7 @@
 class Network {
 public:
     double in_sample_error;
+    double best_in_sample_error;
     double in_sample_error_improvement_rate;
     double out_of_sample_error;
     double out_of_sample_error_improvement_rate;
@@ -22,7 +23,7 @@ public:
 
     void train(const std::vector<double>& expected);
 
-    void updateInSampleError();
+    void updateInSampleError(double mse);
 
     void reflect();
 
@@ -35,6 +36,7 @@ private:
     double learning_rate;
     double target_error;
     double stagnation_rate;
+    double last_out_of_sample_error;
     bool reflecting;
     int reflection_iterations;
     int memory_size;
@@ -43,7 +45,7 @@ private:
 
     std::vector<double> errors(std::vector<double> expected);
 
-    double averageInSampleError();
+    double meanSquareError();
 
     double smooth(double previous, double next);
 

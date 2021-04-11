@@ -17,7 +17,13 @@ static const double PI = 3.1415926535897932;
 
 double realOutput(double x)
 {
-    return (sin(x) + 1) / 2;
+    return sin(x) + sin(x*5)/2 + sin(x*10)/2 + 4;
+}
+
+
+double realOutputWithNoise(double x)
+{
+    return realOutput(x) + random(-0.2, 0.2);
 }
 
 
@@ -30,11 +36,11 @@ void generatePredictions(Network &network, int epoch)
 
     outfile.open("files/epoch" + ss.str() + ".csv");
 
-    outfile << "Input,Predicted,Expected" << endl;
+    outfile << "Input,Expected,Predicted,Error" << endl;
     for (int i=0; i<BATCH_SIZE; ++i) {
         double x = random(0, 2*PI);
         outputs = network.feed(vector<double>{x});
-        outfile << x << "," << outputs[0] << "," << realOutput(x) << endl;
+        outfile << x << "," << realOutput(x) << "," << outputs[0] << "," << outputs[0]-realOutput(x) << endl;
     }
 
     outfile.close();
@@ -43,24 +49,25 @@ void generatePredictions(Network &network, int epoch)
 
 void sine()
 {
-    Network network(vector<Layer *> {
-            new Layer(1, 2),
-            new Layer(2, 2),
+    vector<Layer *> layers = {
             new Layer(2, 2),
             new Layer(2, 2),
             new Layer(2, 1)
-    });
+    };
+    Network network(layers);
 
     generatePredictions(network, 0);
 
-    for (int epoch=1; epoch<1000; ++epoch) {
+    for (int batch=1; batch<500; ++batch) {
         for (int sample=0; sample<BATCH_SIZE; sample++) {
             double x = random(0, 2*PI);
-            network.feed(vector<double>{x});
-            network.train(vector<double>{realOutput(x)});
+            vector<double> input = {x};
+            vector<double> expected = {realOutputWithNoise(x)};
+            network.feed(input);
+            network.train(expected);
         }
-        cout << "epoch " << epoch << endl;
-        generatePredictions(network, epoch);
+        cout << "batch " << batch << endl;
+        generatePredictions(network, batch);
         network.reflect();
     }
 }

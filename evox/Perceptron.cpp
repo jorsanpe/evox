@@ -75,13 +75,10 @@ void Perceptron::addInputs(int n)
 {
     this->num_inputs += n;
     for (int i=0; i<n; ++i) {
-        if (delta > 0) {
-            weights.push_back(random(-0.5, 0));
-        } else {
-            weights.push_back(random(0, 0.5));
-        }
+        weights.push_back(0);
     }
     weighed_deltas.resize(num_inputs);
+    derivatives.resize(num_inputs);
 }
 
 

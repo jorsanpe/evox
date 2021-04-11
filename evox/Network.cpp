@@ -1,24 +1,25 @@
 /*
  * Copyright (c) 2020. Jordi Sánchez
  */
-#include <algorithm>
 #include <iostream>
-#include <utility>
 #include <evox/random.h>
 #include <evox/Network.h>
+#include <cmath>
 
 
 using namespace std;
 
 const int DEFAULT_MEMORY_SIZE = 1000;
-const int DEFAULT_REFLECTION_ITERATIONS = 50;
+const int DEFAULT_REFLECTION_ITERATIONS = 100;
+const double DEFAULT_MISTAKE_DEVIATION = 0.05;
 const double DEFAULT_LEARNING_RATE = 0.01;
-const double DEFAULT_TARGET_ERROR = 0.005;
-const double DEFAULT_STAGNATION_RATE = 0.01;
+const double DEFAULT_TARGET_ERROR = 1;
+const double DEFAULT_STAGNATION_RATE = 0.5;
 
 
 Network::Network(const vector<Layer *> &layers)
 {
+    // Meta-learning: these parameters could be learned as well. Also, they could be dynamic
     this->layers = layers;
     this->learning_rate = DEFAULT_LEARNING_RATE;
     this->in_sample_error = 1;
@@ -28,6 +29,7 @@ Network::Network(const vector<Layer *> &layers)
     this->reflection_iterations = DEFAULT_REFLECTION_ITERATIONS;
     this->reflecting = false;
     this->stagnation_rate = DEFAULT_STAGNATION_RATE;
+    this->best_in_sample_error = 1000000;
     max_output_values.resize(layers.back()->numNeurons(), 1);
 }
 
@@ -57,8 +59,10 @@ void Network::train(const vector<double>& expected)
     output_error = errors(expected);
 
     if (!reflecting) {
-        storeSample(expected);
         updateOutOfSampleError(output_error);
+        if (last_out_of_sample_error > DEFAULT_MISTAKE_DEVIATION) {
+            storeSample(expected);
+        }
     }
 
     backpropagate(output_error);
@@ -106,8 +110,10 @@ void Network::updateOutOfSampleError(const vector<double> &output_error)
     double next_value = 0;
 
     for (int i=0; i<output_error.size(); ++i) {
-        next_value += abs(output_error[i] / max_output_values[i]);
+        next_value += pow(output_error[i], 2); //abs(output_error[i] / max_output_values[i]);
     }
+    last_out_of_sample_error = next_value;
+
     next_value = smooth(out_of_sample_error, next_value);
 
     out_of_sample_error_improvement_rate = (out_of_sample_error - next_value) / out_of_sample_error;
@@ -117,45 +123,57 @@ void Network::updateOutOfSampleError(const vector<double> &output_error)
 
 void Network::reflect()
 {
+    double mse;
+    vector<double> predicted;
+
     reflecting = true;
-    for (int i=0; i<reflection_iterations; ++i) {
+    in_sample_error_improvement_rate = 1;
+    for (int i=0; i<reflection_iterations&&!stoppedLearning(); ++i) {
+        mse = 0;
+
         for (const auto &sample: sample_memory) {
-            feed(sample.inputs);
+            predicted = feed(sample.inputs);
             train(sample.expected_outputs);
+
+            for (int j=0; j<predicted.size(); ++j) {
+                mse += (predicted[j] - sample.expected_outputs[j]) * (predicted[j] - sample.expected_outputs[j]);
+            }
         }
-        updateInSampleError();
+
+        updateInSampleError(mse);
     }
+
     reflecting = false;
 
-    cout << "in_sample_error: " << in_sample_error << endl;
-    cout << "in_sample_error_improvement_rate: " << in_sample_error_improvement_rate << endl;
-    cout << "out_of_sample_error: " << out_of_sample_error << endl;
-    cout << "out_of_sample_error_improvement_rate: " << out_of_sample_error_improvement_rate << endl;
+    cout << "" << in_sample_error;
+    cout << ", ( " << in_sample_error_improvement_rate << " )";
+    cout << ", " << out_of_sample_error;
+    cout << ", ( " << out_of_sample_error_improvement_rate << " )" << endl;
 
-    if (stoppedLearning()) {
-        if (modelTooSimple()) {
-            evolve();
-        }
-        if (modelTooComplex()) {
-            simplify();
-        }
-        stagnation_rate = stagnation_rate * (1 - learning_rate);
+    if (best_in_sample_error < (in_sample_error+stagnation_rate) && modelTooSimple()) {
+        evolve();
+    }
+
+    if (in_sample_error < best_in_sample_error) {
+        best_in_sample_error = in_sample_error;
     }
 }
 
 
-void Network::updateInSampleError()
+bool Network::stoppedLearning()
 {
-    double next_value = averageInSampleError();
-
-    in_sample_error_improvement_rate = smooth(
-            in_sample_error_improvement_rate,
-            in_sample_error - next_value);
-    in_sample_error = smooth(in_sample_error, next_value);
+    return in_sample_error_improvement_rate >= 0 && in_sample_error_improvement_rate < stagnation_rate;
 }
 
 
-double Network::averageInSampleError()
+void Network::updateInSampleError(double mse)
+{
+    in_sample_error_improvement_rate = in_sample_error - mse;
+    in_sample_error = smooth(in_sample_error, mse);
+}
+
+
+double Network::meanSquareError()
 {
     double average_error=0;
     vector<double> predicted;
@@ -163,17 +181,11 @@ double Network::averageInSampleError()
     for (auto sample: sample_memory) {
         predicted = feed(sample.inputs);
         for (int i=0; i<predicted.size(); ++i) {
-            average_error += abs(predicted[i] - sample.expected_outputs[i]) / max_output_values[i];
+            average_error += pow(predicted[i] - sample.expected_outputs[i], 2);
         }
     }
 
     return average_error / sample_memory.size();
-}
-
-
-bool Network::stoppedLearning()
-{
-    return in_sample_error_improvement_rate >= 0 && in_sample_error_improvement_rate < stagnation_rate;
 }
 
 
