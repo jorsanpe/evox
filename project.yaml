@@ -1,11 +1,11 @@
 name: 'evox'
-version: 0.1
+version: '0.1.0'
 build:
   packages:
     evox:
     apps:
   bits:
-  cflags:
+  cppflags:
     - -g
     - -std=c++11
     - -O2
@@ -14,7 +14,7 @@ test:
     cpputest: 'latest'
   packages:
     tests/helpers:
-  cflags:
+  cppflags:
     - -g
     - -std=c++11
 targets:

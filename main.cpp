@@ -6,7 +6,7 @@
 
 int main() 
 {
-    mnist();
+    sine();
 
     return 0;
 }
